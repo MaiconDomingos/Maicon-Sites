@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Portfólio - Maicon Domingos</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-<!-- Ícones Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
@@ -13,6 +12,7 @@
   --cor-bg: #0a0a0a;
   --cor-ciano: #00fff7;
   --cor-texto: #e0e0e0;
+  --cor-matrix: #00ff00;
 }
 
 * {
@@ -27,9 +27,11 @@ body {
   background: var(--cor-bg);
   color: var(--cor-texto);
   line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 0;
 }
 
-/* HEADER */
 header {
   background: #111;
   padding: 15px 30px;
@@ -66,7 +68,6 @@ header {
   color: var(--cor-ciano);
 }
 
-/* HAMBÚRGUER */
 .hamburguer {
   display: flex;
   flex-direction: column;
@@ -85,7 +86,6 @@ header {
   transition: 0.3s;
 }
 
-/* ANIMAÇÃO VIRA X */
 .hamburguer.ativo span:nth-child(1) {
   transform: rotate(45deg) translate(5px, 5px);
 }
@@ -96,7 +96,6 @@ header {
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* MENU LATERAL */
 .menu-mobile {
   display: flex;
   flex-direction: column;
@@ -132,7 +131,6 @@ header {
   border-radius: 6px;
 }
 
-/* HERO */
 .hero {
   display: flex;
   justify-content: space-between;
@@ -164,7 +162,6 @@ header {
   object-fit: cover;
 }
 
-/* SOBRE */
 #sobre {
   padding: 80px 40px;
   text-align: center;
@@ -187,7 +184,6 @@ header {
   line-height: 1.8;
 }
 
-/* RODAPÉ */
 footer {
   text-align: center;
   padding: 30px 20px;
@@ -220,6 +216,38 @@ footer p {
   border-radius: 50%;
   padding: 10px;
   box-shadow: 0 0 15px var(--cor-ciano);
+}
+
+/* Lanterna */
+#spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  --mx: 50%;
+  --my: 50%;
+  background: radial-gradient(
+    circle at var(--mx) var(--my),
+    rgba(0,255,247,0.45) 0%,
+    rgba(0,255,247,0.25) 5%,
+    rgba(0,255,247,0.10) 10%,
+    rgba(0,255,247,0.00) 20%
+  );
+  mix-blend-mode: screen;
+  transition: background 0.08s linear;
+}
+
+/* Efeito Matrix no fundo */
+#matrixCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  pointer-events: none;
+  background: transparent;
+  opacity: 0.3; /* aumentei a opacidade */
 }
 </style>
 </head>
@@ -264,7 +292,6 @@ footer p {
   </p>
 </section>
 
-<!-- RODAPÉ -->
 <footer>
   <div class="social">
     <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
@@ -275,12 +302,90 @@ footer p {
   <p>&copy; 2025 - Todos os direitos reservados | Criado por Maicon Domingos</p>
 </footer>
 
+<canvas id="matrixCanvas"></canvas>
+<div id="spotlight" aria-hidden="true"></div>
+
 <script>
 function toggleMenu() {
   document.getElementById('menuMobile').classList.toggle('ativo');
   document.querySelector('.hamburguer').classList.toggle('ativo');
 }
+
+// Lanterna (spotlight)
+(function(){
+  const spotlight = document.getElementById('spotlight');
+  if(!spotlight) return;
+
+  let targetX = 50;
+  let targetY = 50;
+  let currentX = 50;
+  let currentY = 50;
+  const ease = 0.15;
+
+  function onPointerMove(e){
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    targetX = (e.clientX / vw) * 100;
+    targetY = (e.clientY / vh) * 100;
+  }
+
+  document.addEventListener('pointermove', onPointerMove);
+
+  function animate(){
+    currentX += (targetX - currentX) * ease;
+    currentY += (targetY - currentY) * ease;
+    spotlight.style.setProperty('--mx', currentX + '%');
+    spotlight.style.setProperty('--my', currentY + '%');
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// Efeito Matrix no fundo
+(function(){
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const letters = 'アァイィウヴエェオカガキギクグケゲコゴサザシジスズセゼソゾタダチッヂヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤャユュヨョラリルレロワヰヱヲンabcdefghijklmnopqrstuvwxyz0123456789';
+  const fontSize = 16;
+  const columns = canvas.width / fontSize;
+  const drops = [];
+
+  for (let x = 0; x < columns; x++) {
+    drops[x] = 1;
+  }
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0, 255, 0, 0.35)';
+    ctx.font = fontSize + 'px monospace';
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = letters.charAt(Math.floor(Math.random() * letters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  setInterval(draw, 50);
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+})();
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
